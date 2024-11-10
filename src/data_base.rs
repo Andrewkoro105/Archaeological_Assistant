@@ -91,8 +91,14 @@ impl DataBase {
 impl From<&Path> for DataBase {
     fn from(path: &Path) -> Self {
         Self {
-            book: reader::xlsx::read(path)
-                .expect(format!("can not read ({})", path.to_string_lossy()).as_str()),
+            book: {
+                if path.exists() {
+                    reader::xlsx::read(path)
+                        .expect(format!("can not read ({})", path.to_string_lossy()).as_str())
+                } else {
+                    new_file()
+                }
+            },
         }
     }
 }
