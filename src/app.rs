@@ -45,7 +45,13 @@ impl Default for ArchaeologicalAssistant {
             data: {
                 [
                     vec![date_picker::Date::today().to_string()],
-                    DataBase::get_end_data(&settings.path_to_db, settings.fields.len(), 3),
+                    {
+                        if settings.path_to_db.exists() {
+                            DataBase::get_end_data(&settings.path_to_db, settings.fields.len(), 3)
+                        } else { 
+                            vec!["".to_string(); settings.fields.len()]
+                        }
+                    },
                 ]
                 .concat()
             },
