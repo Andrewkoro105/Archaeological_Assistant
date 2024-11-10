@@ -7,13 +7,7 @@
    cargo install --git https://github.com/Andrewkoro105/Archaeological_Assistant.git
    ```
 3. run:
-    
-    - mac
-
-      ```
-      open -a "~/.cargo/bin/Archaeological_Assistant.app"
-      ```
-    - linux
+    - mac or linux
     
         ```
       ~/.cargo/bin/Archaeological_Assistant
