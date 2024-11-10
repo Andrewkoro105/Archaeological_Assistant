@@ -33,7 +33,7 @@ enum MenuStatus {
 pub struct ArchaeologicalAssistant {
     menu_status: MenuStatus,
     data: Vec<String>,
-    quantity: usize,
+    quantity: String,
     settings: Settings,
 }
 
@@ -55,7 +55,7 @@ impl Default for ArchaeologicalAssistant {
                 ]
                 .concat()
             },
-            quantity: 0,
+            quantity: "0".to_string(),
             settings,
         }
     }
@@ -71,10 +71,10 @@ impl ArchaeologicalAssistant {
             Message::None => {}
             Message::SetData(str, id) => self.data[id] = str,
             Message::SetQuantity(quantity) => {
-                self.quantity = if quantity.is_empty() {
-                    0
-                } else {
-                    quantity.parse().unwrap_or(self.quantity)
+                if quantity.is_empty() {
+                    self.quantity = "".to_string()
+                } else if quantity.parse::<u32>().is_ok(){
+                    self.quantity = quantity
                 }
             }
             Message::SetMenu(menu_status) => {
@@ -86,7 +86,7 @@ impl ArchaeologicalAssistant {
             Message::Create => DataBase::create_record(
                 &self.settings.path_to_db,
                 &self.settings.print_settings,
-                self.quantity as u32,
+                self.quantity.parse().unwrap_or(0),
                 self.data.clone(),
             ),
             _ => panic!("Message not found"),
