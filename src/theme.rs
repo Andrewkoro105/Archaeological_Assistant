@@ -1,5 +1,6 @@
 use iced::advanced::layout::padded;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Theme {
@@ -50,6 +51,31 @@ pub enum Theme {
 }
 
 impl Theme {
+    pub const ALL: [Theme; 22] = [
+        Theme::Light,
+        Theme::Dark,
+        Theme::Dracula,
+        Theme::Nord,
+        Theme::SolarizedLight,
+        Theme::SolarizedDark,
+        Theme::GruvboxLight,
+        Theme::GruvboxDark,
+        Theme::CatppuccinLatte,
+        Theme::CatppuccinFrappe,
+        Theme::CatppuccinMacchiato,
+        Theme::CatppuccinMocha,
+        Theme::TokyoNight,
+        Theme::TokyoNightStorm,
+        Theme::TokyoNightLight,
+        Theme::KanagawaWave,
+        Theme::KanagawaDragon,
+        Theme::KanagawaLotus,
+        Theme::Moonfly,
+        Theme::Nightfly,
+        Theme::Oxocarbon,
+        Theme::Ferra,
+    ];
+
     pub fn to_iced_theme(&self) -> iced::Theme {
         match self {
             Theme::Light => iced::Theme::Light,
@@ -78,32 +104,31 @@ impl Theme {
     }
 }
 
-impl From<usize> for Theme {
-    fn from(id: usize) -> Self {
-        match id {
-            0 => Theme::Light,
-            1 => Theme::Dark,
-            2 => Theme::Dracula,
-            3 => Theme::Nord,
-            4 => Theme::SolarizedLight,
-            5 => Theme::SolarizedDark,
-            6 => Theme::GruvboxLight,
-            7 => Theme::GruvboxDark,
-            8 => Theme::CatppuccinLatte,
-            9 => Theme::CatppuccinFrappe,
-            10 => Theme::CatppuccinMacchiato,
-            11 => Theme::CatppuccinMocha,
-            12 => Theme::TokyoNight,
-            13 => Theme::TokyoNightStorm,
-            14 => Theme::TokyoNightLight,
-            15 => Theme::KanagawaWave,
-            16 => Theme::KanagawaDragon,
-            17 => Theme::KanagawaLotus,
-            18 => Theme::Moonfly,
-            19 => Theme::Nightfly,
-            20 => Theme::Oxocarbon,
-            21 => Theme::Ferra,
-            _ => panic!("Theme not found"),
-        }
+impl Display for Theme {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Theme::Light => "Light",
+            Theme::Dark => "Dark",
+            Theme::Dracula => "Dracula",
+            Theme::Nord => "Nord",
+            Theme::SolarizedLight => "SolarizedLight",
+            Theme::SolarizedDark => "SolarizedDark",
+            Theme::GruvboxLight => "GruvboxLight",
+            Theme::GruvboxDark => "GruvboxDark",
+            Theme::CatppuccinLatte => "CatppuccinLatte",
+            Theme::CatppuccinFrappe => "CatppuccinFrappe",
+            Theme::CatppuccinMacchiato => "CatppuccinMacchiato",
+            Theme::CatppuccinMocha => "CatppuccinMocha",
+            Theme::TokyoNight => "TokyoNight",
+            Theme::TokyoNightStorm => "TokyoNightStorm",
+            Theme::TokyoNightLight => "TokyoNightLight",
+            Theme::KanagawaWave => "KanagawaWave",
+            Theme::KanagawaDragon => "KanagawaDragon",
+            Theme::KanagawaLotus => "KanagawaLotus",
+            Theme::Moonfly => "Moonfly",
+            Theme::Nightfly => "Nightfly",
+            Theme::Oxocarbon => "Oxocarbon",
+            Theme::Ferra => "Ferra",
+        })
     }
 }

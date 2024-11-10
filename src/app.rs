@@ -1,6 +1,6 @@
 use crate::data_base::DataBase;
 use crate::settings::{Axis, FieldType, Settings};
-use iced::widget::{button, column, container, row, text, text_input, Column, Text};
+use iced::widget::{button, column, combo_box, container, row, text, text_input, Column, Text};
 use iced::{alignment, Element, Length, Renderer, Theme};
 use iced_aw::{date_picker, selection_list, TabLabel, Tabs};
 use std::fmt::Debug;
@@ -9,6 +9,7 @@ use std::fmt::Debug;
 pub enum Message {
     None,
     Create,
+    SetInsertMethods(InsertMethods),
     SetData(String, usize),
     SetQuantity(String),
     SetMenu(MenuStatus),
@@ -21,7 +22,7 @@ pub enum Message {
     SetPositionImage(String, Axis),
     SetHeightText(String),
     SetTextSize(String),
-    SetTheme(usize, &'static str),
+    SetTheme(crate::theme::Theme),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -30,11 +31,20 @@ enum MenuStatus {
     Settings,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum InsertMethods {
+    StartEnd(bool),
+    Input(String),
+    AutoInsert(usize),
+}
+
 pub struct ArchaeologicalAssistant {
+    insert_methods: InsertMethods,
     menu_status: MenuStatus,
     data: Vec<String>,
     quantity: String,
     settings: Settings,
+    state_themes: combo_box::State<crate::theme::Theme>,
 }
 
 impl Default for ArchaeologicalAssistant {
@@ -42,21 +52,20 @@ impl Default for ArchaeologicalAssistant {
         let settings = Settings::load();
         Self {
             menu_status: MenuStatus::Main,
+            insert_methods: InsertMethods::StartEnd(true),
             data: {
-                [
-                    vec![date_picker::Date::today().to_string()],
-                    {
-                        if settings.path_to_db.exists() {
-                            DataBase::get_end_data(&settings.path_to_db, settings.fields.len(), 3)
-                        } else { 
-                            vec!["".to_string(); settings.fields.len()]
-                        }
-                    },
-                ]
+                [vec![date_picker::Date::today().to_string()], {
+                    if settings.path_to_db.exists() {
+                        DataBase::get_end_data(&settings.path_to_db, settings.fields.len(), 3)
+                    } else {
+                        vec!["".to_string(); settings.fields.len()]
+                    }
+                }]
                 .concat()
             },
             quantity: "0".to_string(),
             settings,
+            state_themes: combo_box::State::new(Vec::from(crate::theme::Theme::ALL)),
         }
     }
 }
@@ -69,11 +78,12 @@ impl ArchaeologicalAssistant {
     pub fn update(&mut self, message: Message) {
         match self.settings.update(message) {
             Message::None => {}
+            Message::SetInsertMethods(insert_methods) => {}
             Message::SetData(str, id) => self.data[id] = str,
             Message::SetQuantity(quantity) => {
                 if quantity.is_empty() {
                     self.quantity = "".to_string()
-                } else if quantity.parse::<u32>().is_ok(){
+                } else if quantity.parse::<u32>().is_ok() {
                     self.quantity = quantity
                 }
             }
@@ -131,21 +141,43 @@ impl ArchaeologicalAssistant {
                     .padding(150)
                 ]
                 .spacing(12),
-                input_fields
+                column![
+                    /*
+                    Tabs::new(Message::SetInsertMethods)
+                        .push(
+                            InsertMethods::StartEnd(true),
+                            TabLabel::Text("Start/End".to_string()),
+                            container().padding(10),
+                        )
+                        .push(
+                            InsertMethods::AutoInsert(0),
+                            TabLabel::Text("Auto insert".to_string()),
+                            container(self.view_settings_menu()).padding(10),
+                        )
+                        .push(
+                            InsertMethods::Input("".to_string()),
+                            TabLabel::Text("Input".to_string()),
+                            container(self.view_settings_menu()).padding(10),
+                        )
+                        .set_active_tab(&self.insert_methods),*/
+                    input_fields
+                ]
             ],
             container(
-                container(column![
-                    row![
-                        text("quantity:"),
-                        text_input("", &self.quantity.to_string())
-                        .on_input(Message::SetQuantity)
+                container(
+                    column![
+                        row![
+                            text("quantity:"),
+                            text_input("", &self.quantity.to_string())
+                                .on_input(Message::SetQuantity)
+                        ]
+                        .spacing(5),
+                        button("create")
+                            .on_press(Message::Create)
+                            .width(Length::Fill)
                     ]
-                    .spacing(5),
-                    button("create")
-                        .on_press(Message::Create)
-                        .width(Length::Fill)
-                ]
-                .spacing(5))
+                    .spacing(5)
+                )
                 .width(200)
             )
             .height(Length::Fill)
@@ -164,7 +196,7 @@ impl ArchaeologicalAssistant {
 
     fn create_1_param<'elem, F>(
         placeholder: &'elem str,
-        value: impl ToString,
+        value: &impl ToString,
         message: F,
     ) -> Element<'elem, Message, Theme, Renderer>
     where
@@ -178,7 +210,7 @@ impl ArchaeologicalAssistant {
 
     fn create_2_param<'elem, F>(
         placeholder: &'elem str,
-        value: (impl ToString, impl ToString),
+        value: &(impl ToString, impl ToString),
         message: F,
     ) -> Element<'elem, Message, Theme, Renderer>
     where
@@ -249,58 +281,40 @@ impl ArchaeologicalAssistant {
                 Message::SelectFont,
                 vec![("font files", &["ttf"])],
             ),
-            Self::create_2_param("size", self.settings.print_settings.size, Message::SetSize),
+            Self::create_2_param(
+                "size",
+                &self.settings.print_settings.input_number.size,
+                Message::SetSize,
+            ),
             Self::create_2_param(
                 "size image",
-                self.settings.print_settings.size_image,
+                &self.settings.print_settings.input_number.size_image,
                 Message::SetSizeImage,
             ),
             Self::create_2_param(
                 "position image",
-                self.settings.print_settings.pos_image,
+                &self.settings.print_settings.input_number.pos_image,
                 Message::SetPositionImage,
             ),
             Self::create_1_param(
                 "text size",
-                self.settings.print_settings.text_size,
+                &self.settings.print_settings.input_number.text_size,
                 Message::SetTextSize,
             ),
             Self::create_1_param(
                 "Y position of text",
-                self.settings.print_settings.text_size,
+                &self.settings.print_settings.input_number.height_text,
                 Message::SetTextSize,
             ),
             text("Application").into(),
             Self::create_param(
                 "Theme",
-                selection_list(
-                    &[
-                        "Light",
-                        "Dark",
-                        "Dracula",
-                        "Nord",
-                        "SolarizedLight",
-                        "SolarizedDark",
-                        "GruvboxLight",
-                        "GruvboxDark",
-                        "CatppuccinLatte",
-                        "CatppuccinFrappe",
-                        "CatppuccinMacchiato",
-                        "CatppuccinMocha",
-                        "TokyoNight",
-                        "TokyoNightStorm",
-                        "TokyoNightLight",
-                        "KanagawaWave",
-                        "KanagawaDragon",
-                        "KanagawaLotus",
-                        "Moonfly",
-                        "Nightfly",
-                        "Oxocarbon",
-                        "Ferra",
-                    ],
+                combo_box(
+                    &self.state_themes,
+                    "Select theme",
+                    Some(&self.settings.theme),
                     Message::SetTheme,
                 )
-                .height(100)
                 .into(),
             ),
         ];
