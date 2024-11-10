@@ -4,7 +4,7 @@
 2. install crate:
     
     ```
-   cargo install --git 
+   cargo install --git https://github.com/Andrewkoro105/Archaeological_Assistant.git
    ```
 3. run:
     
