@@ -13,9 +13,14 @@
       ```
       open -a "~/.cargo/bin/Archaeological_Assistant.app"
       ```
-    - linux or windows
+    - linux
     
         ```
-      ~/.cargo/bin/Archaeological_Assistant.app
+      ~/.cargo/bin/Archaeological_Assistant
+      ```
+    - windows
+    
+        ```
+      ~/.cargo/bin/Archaeological_Assistant.exe
       ```
     
