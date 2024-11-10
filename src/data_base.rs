@@ -68,18 +68,20 @@ impl DataBase {
     pub fn create_record(
         path: &Path,
         print_settings: &PrintSettings,
-        quantity: usize,
+        quantity: u32,
         data: Vec<String>,
     ) {
         let mut db = DataBase::from(path);
         let sheet = db.get_sheet_mut();
-        let end_line_index = Self::get_end_line_index(&sheet);
-        for (str_field, i) in data.iter().zip(2..data.len() as u32 + 2) {
-            sheet.get_cell_mut((i, end_line_index + 1)).set_value(str_field);
+        let start_end_line_index = Self::get_end_line_index(&sheet);
+        for end_line_index in (0..quantity).map(|index| index + start_end_line_index) {
+            for (str_field, i) in data.iter().zip(2..data.len() as u32 + 2) {
+                sheet.get_cell_mut((i, end_line_index + 1)).set_value(str_field);
+            }
+
+            let end_index = sheet.get_value_number((1, end_line_index)).unwrap_or(0.0);
+            sheet.get_cell_mut((1, end_line_index + 1)).set_value_number(end_index + 1.0);
         }
-        
-        let end_index = sheet.get_value_number((1, end_line_index)).unwrap_or(0.0);
-        sheet.get_cell_mut((1, end_line_index + 1)).set_value_number(end_index + 1.0);
         db.save(path);
     }
 

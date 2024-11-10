@@ -71,7 +71,11 @@ impl ArchaeologicalAssistant {
             Message::None => {}
             Message::SetData(str, id) => self.data[id] = str,
             Message::SetQuantity(quantity) => {
-                self.quantity = quantity.parse().unwrap_or(self.quantity)
+                self.quantity = if quantity.is_empty() {
+                    0
+                } else {
+                    quantity.parse().unwrap_or(self.quantity)
+                }
             }
             Message::SetMenu(menu_status) => {
                 if self.menu_status == MenuStatus::Settings && self.menu_status != menu_status {
@@ -82,7 +86,7 @@ impl ArchaeologicalAssistant {
             Message::Create => DataBase::create_record(
                 &self.settings.path_to_db,
                 &self.settings.print_settings,
-                self.quantity,
+                self.quantity as u32,
                 self.data.clone(),
             ),
             _ => panic!("Message not found"),
