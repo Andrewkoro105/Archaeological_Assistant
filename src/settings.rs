@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::path::Path;
 use crate::theme::Theme;
+use std::env;
 
 #[derive(Debug, Clone)]
 pub enum Axis {
@@ -52,7 +53,7 @@ impl Field {
 impl Default for PrintSettings {
     fn default() -> Self {
         Self {
-            font: Path::new("/home/andrewkoro105/Archaeological_assistant/18685.ttf").into(),
+            font: Path::new(&format!("{}/Archaeological_assistant/18685.ttf", env::var("HOME").unwrap())).into(),
             height_text: 1,
             pos_image: (10, 33),
             size: (40, 58),
@@ -73,7 +74,7 @@ impl Default for Settings {
                 Field::new(FieldType::Text, "info".to_string()),
             ],
             path_to_db: Path::new(
-                "/home/andrewkoro105/Archaeological_assistant/Archaeological_assistant_db.xlsx",
+                &format!("{}/Archaeological_assistant/Archaeological_assistant_db.xlsx", env::var("HOME").unwrap()),
             )
             .into(),
             print_settings: PrintSettings::default(),
@@ -177,7 +178,8 @@ impl Settings {
     }
 
     pub fn load() -> Self {
-        let path = Path::new("/home/andrewkoro105/Archaeological_assistant/settings.cbor");
+        let str_path = &format!("{}/Archaeological_assistant/settings.cbor", env::var("HOME").unwrap());
+        let path = Path::new(str_path);
         if path.exists() {
             from_reader(std::fs::File::open(path).expect("can`t open settings.cbor"))
                 .unwrap_or(Self::default())
@@ -192,7 +194,7 @@ impl Settings {
             OpenOptions::new()
                 .write(true)
                 .create(true)
-                .open("/home/andrewkoro105/Archaeological_assistant/settings.cbor")
+                .open(&format!("{}/Archaeological_assistant/settings.cbor", env::var("HOME").unwrap()))
                 .expect("can`t open or create settings.cbor"),
         )
         .expect("can`t write settings.cbor");
