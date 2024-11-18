@@ -1,11 +1,6 @@
 mod app;
-mod settings;
-mod theme;
-mod data_base;
-mod printer;
 
 use app::ArchaeologicalAssistant;
-use iced::Theme::{Dark, Dracula};
 use iced_aw::iced_fonts;
 
 pub fn main() {

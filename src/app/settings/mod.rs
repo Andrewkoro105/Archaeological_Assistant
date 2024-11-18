@@ -1,13 +1,31 @@
-use crate::app::Message;
-use crate::theme::Theme;
+pub mod insert_methods;
+pub mod print_settings;
+
+use crate::app::settings::insert_methods::InsertMethodsData;
+use crate::app::theme::Theme;
+use crate::app::{theme, Message};
 use ciborium::from_reader;
 use ciborium::into_writer;
 use native_dialog::FileDialog;
+use print_settings::PrintSettings;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::OpenOptions;
 use std::path::Path;
-use sugar::hashmap;
+
+#[derive(Debug, Clone)]
+pub enum MessageSettings {
+    SelectDb(Vec<(&'static str, &'static [&'static str])>),
+    SelectFont(Vec<(&'static str, &'static [&'static str])>),
+    SetPathToDb(String),
+    SetPathToFont(String),
+    SetSize(String, Axis),
+    SetSizeImage(String, Axis),
+    SetPositionImage(String, Axis),
+    SetHeightText(String),
+    SetTextSize(String),
+    SetTheme(Theme),
+} 
 
 #[derive(Debug, Clone)]
 pub enum Axis {
@@ -27,69 +45,18 @@ pub struct Field {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct InputNumberForPrintSettings {
-    pub height_text: String,
-    pub pos_image: (String, String),
-    pub size: (String, String),
-    pub size_image: (String, String),
-    pub text_size: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct PrintSettings {
-    pub font: Box<Path>,
-    pub input_number: InputNumberForPrintSettings,
-    height_text: u32,
-    pos_image: (u32, u32),
-    size: (u32, u32),
-    size_image: (u32, u32),
-    text_size: u32,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct Settings {
     pub current_language: String,
     pub fields: Vec<Field>,
     pub path_to_db: Box<Path>,
     pub print_settings: PrintSettings,
     pub theme: Theme,
+    pub insert_methods_data: InsertMethodsData,
 }
-
-struct InputSettings {}
 
 impl Field {
     pub fn new(field_type: FieldType, name: String) -> Self {
         Self { field_type, name }
-    }
-}
-
-impl Default for PrintSettings {
-    fn default() -> Self {
-        Self {
-            font: Path::new(&format!(
-                "{}/Archaeological_assistant/18685.ttf",
-                env::var("HOME").unwrap()
-            ))
-            .into(),
-            input_number: Default::default(),
-            height_text: 1,
-            pos_image: (10, 33),
-            size: (40, 58),
-            size_image: (20, 20),
-            text_size: 15,
-        }
-    }
-}
-
-impl Default for InputNumberForPrintSettings {
-    fn default() -> Self {
-        Self {
-            height_text: "1".to_string(),
-            pos_image: ("10".to_string(), "33".to_string()),
-            size: ("40".to_string(), "58".to_string()),
-            size_image: ("20".to_string(), "20".to_string()),
-            text_size: "15".to_string(),
-        }
     }
 }
 
@@ -110,6 +77,7 @@ impl Default for Settings {
             .into(),
             print_settings: PrintSettings::default(),
             theme: Theme::Dark,
+            insert_methods_data: InsertMethodsData::default(),
         }
     }
 }
@@ -120,7 +88,7 @@ impl Settings {
         message: TextInputMessage,
         file_types: Vec<(&'static str, &'static [&'static str])>,
     ) where
-        TextInputMessage: Fn(String) -> Message + Clone,
+        TextInputMessage: Fn(String) -> MessageSettings + Clone,
     {
         let mut dialog = FileDialog::new().set_location("~/Desktop");
         for (file_type, extensions) in file_types {
@@ -157,72 +125,61 @@ impl Settings {
         }
     }
 
-    pub fn update(&mut self, message: Message) -> Message {
+    pub fn update(&mut self, message: MessageSettings) {
         match message {
-            Message::SelectDb(file_types) => {
-                self.select_file(Message::SetPathToDb, file_types);
-                Message::None
+            MessageSettings::SelectDb(file_types) => {
+                self.select_file(MessageSettings::SetPathToDb, file_types)
             }
-            Message::SelectFont(file_types) => {
-                self.select_file(Message::SetPathToFont, file_types);
-                Message::None
+            MessageSettings::SelectFont(file_types) => {
+                self.select_file(MessageSettings::SetPathToFont, file_types)
             }
-            Message::SetPathToDb(path_str) => {
-                self.path_to_db = Box::from(Path::new(&path_str));
-                Message::None
+            MessageSettings::SetPathToDb(path_str) => {
+                self.path_to_db = Box::from(Path::new(&path_str))
             }
-            Message::SetPathToFont(path_str) => {
-                self.print_settings.font = Box::from(Path::new(&path_str));
-                Message::None
+            MessageSettings::SetPathToFont(path_str) => {
+                self.print_settings.font = Box::from(Path::new(&path_str))
             }
-            Message::SetSize(size, axis) => {
+            MessageSettings::SetSize(size, axis) => {
                 Self::set_number_with_coordinate_settings(
                     &size,
                     &mut self.print_settings.input_number.size,
                     &mut self.print_settings.size,
                     axis,
-                );
-                Message::None
+                )
             }
-            Message::SetSizeImage(size_image, axis) => {
+            MessageSettings::SetSizeImage(size_image, axis) => {
                 Self::set_number_with_coordinate_settings(
                     &size_image,
                     &mut self.print_settings.input_number.size_image,
                     &mut self.print_settings.size_image,
                     axis,
-                );
-                Message::None
+                )
             }
-            Message::SetPositionImage(pos_image, axis) => {
+            MessageSettings::SetPositionImage(pos_image, axis) => {
                 Self::set_number_with_coordinate_settings(
                     &pos_image,
                     &mut self.print_settings.input_number.pos_image,
                     &mut self.print_settings.pos_image,
                     axis,
-                );
-                Message::None
+                )
             }
-            Message::SetHeightText(height_text) => {
+            MessageSettings::SetHeightText(height_text) => {
                 Self::set_number_settings(
                     &height_text,
                     &mut self.print_settings.input_number.height_text,
                     &mut self.print_settings.height_text,
-                );
-                Message::None
+                )
             }
-            Message::SetTextSize(text_size) => {
+            MessageSettings::SetTextSize(text_size) => {
                 Self::set_number_settings(
                     &text_size,
                     &mut self.print_settings.input_number.text_size,
                     &mut self.print_settings.text_size,
-                );
-                Message::None
+                )
             }
-            Message::SetTheme(theme) => {
-                self.theme = theme;
-                Message::None
+            MessageSettings::SetTheme(theme) => {
+                self.theme = theme
             }
-            _ => message,
         }
     }
 
