@@ -22,7 +22,7 @@ pub enum StartEnd {
     End,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct InputNumberForInsertMethodsData {
     pub input: String,
     pub auto_insert: String,
@@ -65,13 +65,22 @@ impl InsertMethodsData {
     }
 }
 
+impl Default for InputNumberForInsertMethodsData {
+    fn default() -> Self {
+        Self {
+            input: "1".to_string(),
+            auto_insert: "".to_string()
+        }
+    }
+}
+
 impl Default for InsertMethodsData {
     fn default() -> Self {
         Self {
             input_number_for_insert_methods_data: Default::default(),
             insert_methods: InsertMethods::StartEnd,
             start_end: StartEnd::End,
-            input: 0,
+            input: 1,
             auto_insert: 0,
         }
     }
