@@ -41,7 +41,7 @@ impl InsertMethodsData {
     fn set_option_number_settings(str: &String, input: &mut String, num: &mut u32) {
         if str.is_empty() {
             *input = "".to_string();
-            *num = 0;
+            *num = 1;
         } else if let Ok(new_num) = str.parse::<u32>() {
             *input = str.clone();
             *num = new_num;

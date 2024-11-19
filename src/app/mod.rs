@@ -42,6 +42,7 @@ pub struct ArchaeologicalAssistant {
     pub state_themes: combo_box::State<theme::Theme>,
     pub state_auto_insert: combo_box::State<u32>,
     pub is_can_start_insert: bool,
+    pub is_replace: bool,
     term: iced_term::Terminal,
 }
 
@@ -64,7 +65,7 @@ impl Default for ArchaeologicalAssistant {
                         vec!["".to_string(); settings.fields.len()]
                     }
                 }]
-                .concat()
+                    .concat()
             },
             state_auto_insert: {
                 if settings.path_to_db.exists() {
@@ -78,6 +79,19 @@ impl Default for ArchaeologicalAssistant {
                 .get_sheet()
                 .get_start_index()
                 > 1.,
+            is_replace: {
+                if settings.path_to_db.exists() {
+                    match settings.insert_methods_data.insert_methods {
+                        InsertMethods::Input => DataBase::from(&*settings.path_to_db)
+                            .get_sheet()
+                            .get_row_index_from_index(settings.insert_methods_data.input)
+                            .is_some(),
+                        _ => false,
+                    }
+                } else {
+                    false
+                }
+            },
             settings,
             state_themes: combo_box::State::new(Vec::from(theme::Theme::ALL)),
             term: iced_term::Terminal::new(
@@ -121,6 +135,13 @@ impl ArchaeologicalAssistant {
         match message {
             Message::None => {}
             Message::SetInsertMethods(insert_methods) => {
+                self.is_replace = if insert_methods == InsertMethods::Input {
+                    DataBase::from(&*self.settings.path_to_db)
+                        .get_sheet().get_row_index_from_index(self.settings.insert_methods_data.input).is_some()
+                } else {
+                    false
+                };
+
                 if insert_methods == InsertMethods::AutoInsert
                     && insert_methods != self.settings.insert_methods_data.insert_methods
                 {
@@ -133,10 +154,21 @@ impl ArchaeologicalAssistant {
 
                 self.settings.insert_methods_data.insert_methods = insert_methods
             }
-            Message::SetInsertMethodsData(insert_methods_input_types) => self
-                .settings
-                .insert_methods_data
-                .update(insert_methods_input_types),
+            Message::SetInsertMethodsData(insert_methods_input_types) => {
+                self.is_replace = match insert_methods_input_types.clone() {
+                    InsertMethodsMessage::Input(input) => if let Ok(input) = input.parse() {
+                        DataBase::from(&*self.settings.path_to_db)
+                            .get_sheet().get_row_index_from_index(input).is_some()
+                    } else {
+                        false
+                    }
+                    _ => false,
+                };
+                self
+                    .settings
+                    .insert_methods_data
+                    .update(insert_methods_input_types)
+            }
             Message::SetData(str, id) => self.data[id] = str,
             Message::SetQuantity(quantity) => {
                 if quantity.is_empty() {
@@ -173,16 +205,16 @@ impl ArchaeologicalAssistant {
                         .get_sheet()
                         .skips(),
                 )
-            },
+            }
             Message::Update => self.term.input("cargo install --git https://github.com/Andrewkoro105/Archaeological_Assistant.git\nexit\n".to_string()),
             Message::Terminal(iced_term::Event::CommandReceived(_, cmd)) => {
                 match self.term.update(cmd) {
                     iced_term::actions::Action::Shutdown => {
                         println!("{}", exec::Command::new(std::env::current_exe().unwrap()).exec());
                     }
-                    _ => {},
+                    _ => {}
                 }
-            },
+            }
         };
 
         self.is_can_start_insert = if DataBase::from(&*self.settings.path_to_db)
