@@ -83,12 +83,13 @@ impl Default for ArchaeologicalAssistant {
                 > 1.,
             is_replace: {
                 if settings.path_to_db.exists() {
-                    match settings.insert_methods_data.insert_methods {
-                        InsertMethods::Input => DataBase::from(&*settings.path_to_db)
+                    if settings.insert_methods_data.insert_methods == InsertMethods::Input {
+                        DataBase::from(&*settings.path_to_db)
                             .get_sheet()
                             .get_row_index_from_index(settings.insert_methods_data.input)
-                            .is_some(),
-                        _ => false,
+                            .is_some()
+                    } else { 
+                        false
                     }
                 } else {
                     false
@@ -197,6 +198,10 @@ impl ArchaeologicalAssistant {
                 self.menu_status = menu_status
             }
             Message::Create => if !self.is_replace || (self.is_replace && self.on_replace) {
+                self.on_replace = false;
+                if self.settings.insert_methods_data.insert_methods == InsertMethods::Input {
+                    self.is_replace = true;
+                }
                 DataBase::create_record(
                     &self.settings.path_to_db,
                     &self.settings.print_settings,
