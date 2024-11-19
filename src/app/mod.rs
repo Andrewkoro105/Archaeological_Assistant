@@ -16,6 +16,7 @@ mod ui;
 pub enum Message {
     None,
     Create,
+    OnReplace(bool),
     Update,
     Terminal(iced_term::Event),
     SetInsertMethods(InsertMethods),
@@ -43,6 +44,7 @@ pub struct ArchaeologicalAssistant {
     pub state_auto_insert: combo_box::State<u32>,
     pub is_can_start_insert: bool,
     pub is_replace: bool,
+    pub on_replace: bool,
     term: iced_term::Terminal,
 }
 
@@ -92,6 +94,7 @@ impl Default for ArchaeologicalAssistant {
                     false
                 }
             },
+            on_replace: false,
             settings,
             state_themes: combo_box::State::new(Vec::from(theme::Theme::ALL)),
             term: iced_term::Terminal::new(
@@ -135,6 +138,7 @@ impl ArchaeologicalAssistant {
         match message {
             Message::None => {}
             Message::SetInsertMethods(insert_methods) => {
+                self.on_replace = false;
                 self.is_replace = if insert_methods == InsertMethods::Input {
                     DataBase::from(&*self.settings.path_to_db)
                         .get_sheet().get_row_index_from_index(self.settings.insert_methods_data.input).is_some()
@@ -155,6 +159,7 @@ impl ArchaeologicalAssistant {
                 self.settings.insert_methods_data.insert_methods = insert_methods
             }
             Message::SetInsertMethodsData(insert_methods_input_types) => {
+                self.on_replace = false;
                 self.is_replace = match insert_methods_input_types.clone() {
                     InsertMethodsMessage::Input(input) => if let Ok(input) = input.parse() {
                         DataBase::from(&*self.settings.path_to_db)
@@ -191,13 +196,15 @@ impl ArchaeologicalAssistant {
                 }
                 self.menu_status = menu_status
             }
-            Message::Create => DataBase::create_record(
-                &self.settings.path_to_db,
-                &self.settings.print_settings,
-                self.quantity.parse().unwrap_or(0),
-                self.data.clone(),
-                &self.settings.insert_methods_data,
-            ),
+            Message::Create => if !self.is_replace || (self.is_replace && self.on_replace) {
+                DataBase::create_record(
+                    &self.settings.path_to_db,
+                    &self.settings.print_settings,
+                    self.quantity.parse().unwrap_or(0),
+                    self.data.clone(),
+                    &self.settings.insert_methods_data,
+                )
+            },
             Message::SetSettings(message_settings) => self.settings.update(message_settings),
             Message::RebootAutoInsertState => {
                 self.state_auto_insert = combo_box::State::new(
@@ -214,6 +221,9 @@ impl ArchaeologicalAssistant {
                     }
                     _ => {}
                 }
+            },
+            Message::OnReplace(input) => {
+                self.on_replace = input;
             }
         };
 

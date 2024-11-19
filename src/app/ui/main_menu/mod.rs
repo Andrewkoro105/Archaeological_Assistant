@@ -13,42 +13,59 @@ impl ArchaeologicalAssistant {
                 self.view_date().into(),
                 column![self.view_input_field().into(),]
             ],
-            container(row![
-                if self.is_replace {
-                    text("!!! This record already exist")
-                        .color(Color::new(1., 1., 0., 1.)).height(Length::Fill).align_y(alignment::Vertical::Bottom)
-                        .into()
-                } else {
-                    Element::from(row![])
-                },
-                container(
-                    column![
-                        {
-                            if self.settings.insert_methods_data.insert_methods
-                                == InsertMethods::StartEnd
+            container(
+                row![
+                    if self.is_replace {
+                        text("!!! This record already exist")
+                            .color(Color::new(1., 1., 0., 1.))
+                            .height(Length::Fill)
+                            .align_y(alignment::Vertical::Bottom)
+                            .into()
+                    } else {
+                        Element::from(row![])
+                    },
+                    container(
+                        column![
                             {
-                                row![
-                                    text("quantity:"),
-                                    text_input::<Message, Theme, Renderer>(
-                                        "",
-                                        &self.quantity.to_string()
-                                    )
-                                    .on_input(Message::SetQuantity)
-                                ]
-                                .spacing(5)
-                                .into()
+                                if self.settings.insert_methods_data.insert_methods
+                                    == InsertMethods::StartEnd
+                                {
+                                    row![
+                                        text("quantity:"),
+                                        text_input::<Message, Theme, Renderer>(
+                                            "",
+                                            &self.quantity.to_string()
+                                        )
+                                        .on_input(Message::SetQuantity)
+                                    ]
+                                    .spacing(5)
+                                    .into()
+                                } else {
+                                    Element::from(text(
+                                        "The field is only available in start/end mode",
+                                    ))
+                                }
+                            },
+                            button(if self.is_replace {
+                                if self.on_replace {
+                                    "Replace"
+                                } else {
+                                    "Not replace"
+                                }
                             } else {
-                                Element::from(text("The field is only available in start/end mode"))
-                            }
-                        },
-                        button(if self.is_replace { "Replace" } else { "create" })
+                                "create"
+                            })
                             .on_press(Message::Create)
                             .width(Length::Fill)
-                    ]
-                    .spacing(5)
-                ).height(Length::Fill).align_y(alignment::Vertical::Bottom)
-                .width(200)
-            ].spacing(5))
+                        ]
+                        .spacing(5)
+                    )
+                    .height(Length::Fill)
+                    .align_y(alignment::Vertical::Bottom)
+                    .width(200)
+                ]
+                .spacing(5)
+            )
             .height(Length::Fill)
             .width(Length::Fill)
             .align_x(alignment::Horizontal::Right)

@@ -6,7 +6,9 @@ use crate::app::settings::{
     FieldType,
 };
 use crate::app::{ArchaeologicalAssistant, Message};
-use iced::widget::{button, column, combo_box, container, radio, row, text, text_input, Column};
+use iced::widget::{
+    button, checkbox, column, combo_box, container, radio, row, text, text_input, Column,
+};
 use iced::{alignment, Element, Renderer, Theme};
 use iced_aw::{TabLabel, Tabs};
 
@@ -42,15 +44,24 @@ impl ArchaeologicalAssistant {
 
     fn view_input_insert(&self) -> impl Into<Element<Message, Theme, Renderer>> {
         container(
-            text_input(
-                "Enter index",
-                &self
-                    .settings
-                    .insert_methods_data
-                    .input_number_for_insert_methods_data
-                    .input,
-            )
-            .on_input(|data| Message::SetInsertMethodsData(InsertMethodsMessage::Input(data))),
+            column![
+                text_input(
+                    "Enter index",
+                    &self
+                        .settings
+                        .insert_methods_data
+                        .input_number_for_insert_methods_data
+                        .input,
+                )
+                .on_input(|data| Message::SetInsertMethodsData(InsertMethodsMessage::Input(data))),
+                if self.is_replace {
+                    checkbox("are you sure you want to replace the data", self.on_replace)
+                        .on_toggle(Message::OnReplace).into()
+                } else {
+                    Element::from(row![])
+                }
+            ]
+            .spacing(5),
         )
         .padding(10)
     }
