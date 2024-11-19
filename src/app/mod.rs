@@ -2,8 +2,9 @@ use crate::app::data_base::table::Table;
 use crate::app::settings::insert_methods::{InsertMethods, InsertMethodsMessage, StartEnd};
 use crate::app::settings::{MessageSettings, Settings};
 use data_base::DataBase;
+use iced::font::{Family, Stretch, Weight};
 use iced::widget::combo_box;
-use iced::Theme;
+use iced::{window, Font, Subscription, Task, Theme};
 use iced_aw::date_picker;
 
 pub mod data_base;
@@ -15,6 +16,8 @@ mod ui;
 pub enum Message {
     None,
     Create,
+    Update,
+    Terminal(iced_term::Event),
     SetInsertMethods(InsertMethods),
     SetInsertMethodsData(InsertMethodsMessage),
     SetData(String, usize),
@@ -28,6 +31,7 @@ pub enum Message {
 pub enum MenuStatus {
     Main,
     Settings,
+    Update,
 }
 
 pub struct ArchaeologicalAssistant {
@@ -38,6 +42,7 @@ pub struct ArchaeologicalAssistant {
     pub state_themes: combo_box::State<theme::Theme>,
     pub state_auto_insert: combo_box::State<u32>,
     pub is_can_start_insert: bool,
+    term: iced_term::Terminal,
 }
 
 impl Default for ArchaeologicalAssistant {
@@ -75,6 +80,28 @@ impl Default for ArchaeologicalAssistant {
                 > 1.,
             settings,
             state_themes: combo_box::State::new(Vec::from(theme::Theme::ALL)),
+            term: iced_term::Terminal::new(
+                0,
+                iced_term::settings::Settings {
+                    font: iced_term::settings::FontSettings {
+                        size: 14.0,
+                        font_type: Font {
+                            weight: Weight::Bold,
+                            family: Family::Name("JetBrainsMono Nerd Font Mono"),
+                            stretch: Stretch::Normal,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    theme: iced_term::settings::ThemeSettings::default(),
+                    backend: iced_term::settings::BackendSettings {
+                        shell: std::env::var("SHELL")
+                            .expect("SHELL variable is not defined")
+                            .to_string(),
+                        input: false,
+                    },
+                },
+            ),
         }
     }
 }
@@ -82,6 +109,12 @@ impl Default for ArchaeologicalAssistant {
 impl ArchaeologicalAssistant {
     pub fn theme(&self) -> Theme {
         self.settings.theme.to_iced_theme()
+    }
+
+    pub(crate) fn subscription(&self) -> Subscription<Message> {
+        let term_subscription = iced_term::Subscription::new(self.term.id);
+        let term_event_stream = term_subscription.event_stream();
+        Subscription::run_with_id(self.term.id, term_event_stream).map(Message::Terminal)
     }
 
     pub fn update(&mut self, message: Message) {
@@ -140,7 +173,16 @@ impl ArchaeologicalAssistant {
                         .get_sheet()
                         .skips(),
                 )
-            }
+            },
+            Message::Update => self.term.input("cargo install --git https://github.com/Andrewkoro105/Archaeological_Assistant.git\nexit\n".to_string()),
+            Message::Terminal(iced_term::Event::CommandReceived(_, cmd)) => {
+                match self.term.update(cmd) {
+                    iced_term::actions::Action::Shutdown => {
+                        println!("{}", exec::Command::new(std::env::current_exe().unwrap()).exec());
+                    }
+                    _ => {},
+                }
+            },
         };
 
         self.is_can_start_insert = if DataBase::from(&*self.settings.path_to_db)
@@ -150,7 +192,7 @@ impl ArchaeologicalAssistant {
         {
             true
         } else {
-            if self.is_can_start_insert { 
+            if self.is_can_start_insert {
                 self.settings.insert_methods_data.start_end = StartEnd::End;
             }
             false

@@ -6,8 +6,10 @@ edition = "2021"
 [dependencies]
 iced = { version = "0.13.1", features = ["default"] }
 iced_aw = { version = "0.11.0", default-features = false, features = ["date_picker", "tabs", "selection_list"] }
+iced_term = { git = "https://github.com/Andrewkoro105/iced_term_with_auto_input.git" }
 ciborium = "0.2.2"
 serde = { version = "1.0.210", features = ["derive"] }
 native-dialog = "0.7.0"
 sugar = "0.2.0"
 umya-spreadsheet = "2.1.2"
+exec = "0.3.1"

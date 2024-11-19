@@ -212,9 +212,3 @@ impl Settings {
         .expect("can`t write settings.cbor");
     }
 }
-
-impl Drop for Settings {
-    fn drop(&mut self) {
-        self.save();
-    }
-}

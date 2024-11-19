@@ -11,6 +11,7 @@ pub fn main() {
     )
     .font(iced_fonts::REQUIRED_FONT_BYTES)
     .theme(|app| app.theme())
+    .subscription(ArchaeologicalAssistant::subscription)
     .run()
     .expect("Can't start the assistant");
 }

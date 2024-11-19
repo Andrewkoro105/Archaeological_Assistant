@@ -1,5 +1,6 @@
 mod main_menu;
-mod settings;
+mod settings_menu;
+mod update_menu;
 
 use crate::app::settings::{Axis, MessageSettings};
 use crate::app::{ArchaeologicalAssistant, MenuStatus, Message};
@@ -83,6 +84,11 @@ impl ArchaeologicalAssistant {
                     MenuStatus::Settings,
                     TabLabel::Text("Settings".to_string()),
                     container(self.view_settings_menu()).padding(10),
+                )
+                .push(
+                    MenuStatus::Update,
+                    TabLabel::Text("Update".to_string()),
+                    container(self.view_update_menu()).padding(10),
                 )
                 .set_active_tab(&self.menu_status),
         )
