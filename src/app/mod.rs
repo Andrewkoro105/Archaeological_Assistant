@@ -157,7 +157,8 @@ impl ArchaeologicalAssistant {
                     )
                 }
 
-                self.settings.insert_methods_data.insert_methods = insert_methods
+                self.settings.insert_methods_data.insert_methods = insert_methods;
+                self.settings.save()
             }
             Message::SetInsertMethodsData(insert_methods_input_types) => {
                 self.on_replace = false;
@@ -173,7 +174,8 @@ impl ArchaeologicalAssistant {
                 self
                     .settings
                     .insert_methods_data
-                    .update(insert_methods_input_types)
+                    .update(insert_methods_input_types);
+                self.settings.save()
             }
             Message::SetData(str, id) => self.data[id] = str,
             Message::SetQuantity(quantity) => {
